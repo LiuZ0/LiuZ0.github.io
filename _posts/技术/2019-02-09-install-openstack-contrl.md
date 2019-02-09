@@ -2297,4 +2297,3 @@ https://docs.openstack.org/zh_CN/user-guide/sdk.html
 命令行速查
 https://docs.openstack.org/zh_CN/user-guide/cli-cheat-sheet.html
 
-
