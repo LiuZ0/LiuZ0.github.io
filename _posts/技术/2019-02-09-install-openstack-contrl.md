@@ -2,7 +2,7 @@
 layout: post
 title: Kubernetes - kubelet bootstrap 流程
 category: 技术
---
+---
 
 
 RDO  install OpenStack Rocky
