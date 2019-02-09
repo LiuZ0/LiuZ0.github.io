@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Kubernetes - kubelet bootstrap 流程
+title: Install - OpenStack流程
 category: 技术
 ---
 
