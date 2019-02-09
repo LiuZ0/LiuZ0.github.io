@@ -1,6 +1,4 @@
 
-
-
 ######################### theme kunka condigure ##############################################
 # Where things are
 source:       .
@@ -115,7 +113,7 @@ disqus:
 
 #################################### global configure #######################################
 
-username: idle010
+username: LiuZ0
 baseurl: /
 markdown: redcarpet
 safe: false
