@@ -4,7 +4,7 @@ title: Install - OpenStack流程
 category: 技术
 ---
 
-
+#
 RDO  install OpenStack Rocky
 
 关闭防火墙
@@ -155,7 +155,7 @@ systemctl enable chronyd
  
 
 ###取消掉###
-配置OpenStack-rocky的yum源文件
+#配置OpenStack-rocky的yum源文件
 官网是yum安装centos-release-openstack-rocky，手动配置了阿里的源
 
 
@@ -173,16 +173,17 @@ gpgcheck=0
 EOF
 
 
-安装OpenStack客户端和selinux服务
+#安装OpenStack客户端和selinux服务
 yum install -y python-openstackclient openstack-selinux
 
-安装数据库服务
-在controller节点安装数据库
+#安装数据库服务
+#在controller节点安装数据库
 yum install -y mariadb mariadb-server python2-PyMySQL
  
 
 修改数据库配置文件
 新建数据库配置文件
+
 /etc/my.cnf.d/openstack.cnf
 添加以下内容
 
@@ -226,7 +227,7 @@ rabbitmqctl set_permissions openstack ".*" ".*" ".*"
 
  
 
-安装memcached 服务
+#安装memcached 服务
 在controller节点上安装memcached
 yum install -y memcached
 
@@ -271,7 +272,7 @@ ETCD_INITIAL_CLUSTER_STATE="new"
  
 
 
-启动etcd服务
+#启动etcd服务
 systemctl start etcd
 systemctl enable etcd
  
@@ -280,7 +281,7 @@ systemctl enable etcd
 etcdctl cluster-health
  
 
-安装keystone服务
+#安装keystone服务
 创建数据库
 mysql -uroot -p000000
  
@@ -368,7 +369,7 @@ Failed to discover available identity versions when contacting http://controller
 
 
 
-//------------------------------------------------
+#安装Glance镜像
 Install glance
   
 mysql -u root -p000000
@@ -410,7 +411,7 @@ openstack endpoint create --region RegionOne \
   image admin http://controller:9292
 
 
-yum install openstack-glance
+#yum install openstack-glance
 Edit the /etc/glance/glance-api.conf file and complete the following actions:
 
 
@@ -488,7 +489,7 @@ systemctl start openstack-glance-api.service \
  
 
 
-验证
+#验证
 . admin-openrc
 
 yum -y install wget
@@ -507,7 +508,7 @@ openstack image list
 
 //---------------------------------------------------------
 
-安装nova服务
+#安装nova服务
 controller节点
 创建数据库
 mysql -u root -p000000
@@ -556,7 +557,7 @@ IDENTIFIED BY '000000';
 flush privileges;
  
 
-创建相关用户、服务
+#创建相关用户、服务
 [root@controller ~]# 
 openstack user create --domain default --password-prompt nova
 User Password:
@@ -607,7 +608,7 @@ placement admin http://controller:8778
 
  
 
-安装软件包
+#安装软件包
 [root@controller ~]# 
 yum install openstack-nova-api openstack-nova-conductor openstack-nova-console openstack-nova-novncproxy openstack-nova-scheduler openstack-nova-placement-api -y
 
@@ -1408,8 +1409,7 @@ openstack server list
 
 
 
-//-------------------------------------------------------------------
-八. 安装和配置swift
+#八. 安装和配置swift
 《一》安装和配置控制器节点
 
 <一>前提条件 
@@ -1460,7 +1460,7 @@ user = swift
 swift_dir = /etc/swift
 
 B.在[pipeline:main]部分中，
-****删除tempurl和 tempauth模块并添加authtoken和keystoneauth 模块：
+删除tempurl和 tempauth模块并添加authtoken和keystoneauth 模块：
 
 [pipeline:main]
 pipeline = catch_errors gatekeeper healthcheck proxy-logging cache container_sync bulk ratelimit authtoken keystoneauth container-quotas account-quotas slo dlo versioned_writes proxy-logging proxy-server
@@ -1516,7 +1516,7 @@ use = egg:swift#memcache
 memcache_servers = controller:11211
 
 
-安装和配置存储节点
+#安装和配置存储节点
 （此处的存储节点为计算节点和网络节点，分别在两个节点都运行以下步骤，以下是以其中一个节点为例）
 
 <一>先决条件
@@ -1700,7 +1700,7 @@ chown -R swift:swift /var/cache/swift
 
 
 
-《三》创建并分发初始铃声
+#《三》创建并分发初始铃声
 在启动对象存储服务之前，您必须创建初始帐户，容器和对象环。环形构建器创建每个节点用来确定和部署存储体系结构的配置文件。
 
 <一>创建账户ring
@@ -1729,7 +1729,7 @@ swift-ring-builder account.builder
 5.平衡 ring：
 swift-ring-builder account.builder rebalance
 
-<二>创建容器ring
+#<二>创建容器ring
 帐户服务器使用帐户 ring 来维护一个容器的列表。 
 1、切换到 /etc/swift目录。
 
@@ -1871,8 +1871,7 @@ openstack object save container2 testfile
 
 
 
-//-------------------------------------------------------------
-CentOS7安装OpenStack(Rocky版)-09.安装Cinder存储服务组件（控制节点）
+#CentOS7安装OpenStack(Rocky版)-09.安装Cinder存储服务组件（控制节点）
 ---Cinder install
 
 9.0.Cinder概述
@@ -2286,8 +2285,7 @@ $ sudo service apache2 restart
 systemctl restart httpd
 
 
-//---------------------------------------------------------------
-OpenStack系统管理
+#OpenStack系统管理
 
 使用仪表盘进行openstack管理
 https://docs.openstack.org/zh_CN/user-guide/dashboard.html
