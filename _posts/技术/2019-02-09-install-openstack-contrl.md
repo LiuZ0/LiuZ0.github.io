@@ -158,6 +158,7 @@ systemctl enable chronyd
 配置OpenStack-rocky的yum源文件
 官网是yum安装centos-release-openstack-rocky，手动配置了阿里的源
 
+
 cat << EOF >> /etc/yum.repos.d/openstack.repo
 [openstack-rocky]
 name=openstack-rocky
@@ -2184,20 +2185,26 @@ openstack domain create --description "Stack projects and users" heat
 创建heat域管理员用户以管理heat域中的项目和用户：
 openstack user create --domain heat --password-prompt heat_domain_admin
 
+
 将admin角色添加到heat域中的heat\u域管理员用户，以启用heat\u域管理员用户的管理堆栈管理权限：
 openstack role add --domain heat --user-domain heat --user heat_domain_admin admin
 
+
 openstack role create heat_stack_owner
+
 
 将heat_stack_owner角色添加到演示项目和用户，以启用演示用户的堆栈管理：
 openstack role add --project service --user admin heat_stack_owner
 
+
 您必须将heat堆栈所有者角色添加到管理堆栈的每个用户。
 openstack role create heat_stack_user
+
 
 安装和配置组件
 yum install -y openstack-heat-api openstack-heat-api-cfn \
   openstack-heat-engine
+
 
 编辑/etc/heat/heat.conf文件并完成以下操作：
 [database]
