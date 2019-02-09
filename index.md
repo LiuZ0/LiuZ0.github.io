@@ -1,6 +1,6 @@
 ---
 layout: page
-title: 改变世界 - 的个人博客
+title: 改变世界 - 个人博客
 ---
 ---
 
