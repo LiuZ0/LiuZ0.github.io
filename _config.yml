@@ -1,7 +1,7 @@
 # Site settings
 title: 个人博客
 email: kkkk@gmail.com
-description: > #孔令贤的个人博客
+description: > #个人博客
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://liuz0.github.io/index.html" # the base hostname & protocol for your site
 
@@ -31,11 +31,11 @@ favicon: /assets/image/favicon.ico
 author:
   name: Lingxian 
   email: kkkk@gmail.com
-  link: http://lingxiankong.github.io/
-  weibo: http://www.weibo.com/lingxiankong
-  weibo_username: Lingxian_Kong
-  github: https://github.com/lingxiankong
-  github_username: lingxiankong
+  link: http://lingxian.github.io/
+  weibo: http://www.weibo.com/lingxian
+  weibo_username: Lingxian_
+  github: https://github.com/lingxian
+  github_username: lingxian
 
 
 locals:
