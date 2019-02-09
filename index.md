@@ -4,8 +4,9 @@ title: 止止止 - 大千世界
 ---
 ---
 
-```![](/images/1986-08-29-about-me/head.jpg)
-
+<!--
+![](/images/1986-08-29-about-me/head.jpg)
+-->
 
 
 2016.01.18至今，作为一名Senior Engineer就职于一家新西兰公司（Catalyst IT）的云计算部门。[Catalyst](http://www.catalyst.net.nz/)是一家基于开源软件的本地IT企业，有着自由、开放的公司文化，我很喜欢。
@@ -35,11 +36,15 @@ title: 止止止 - 大千世界
 
 联系方式：
 
-```- Weibo：[Lingxian_](http://weibo.com/lingxian)
+<!--
+- Weibo：[Lingxian_](http://weibo.com/lingxian)
 - Email: <liuzc.xhu@aliyun.com>
-```- Linkdin: <https://www.linkedin.com/in/lingxian--a1b23610a>
-```- 微信公众号二维码：  
+- Linkdin: <https://www.linkedin.com/in/lingxian--a1b23610a>
+- 微信公众号二维码：  
 
-```  ![微信公众号二维码](/images/1986-08-29-about-me/my_wechat.jpg)
+ ![微信公众号二维码](/images/1986-08-29-about-me/my_wechat.jpg)
+-->
+
+
 ---
 {% include disqus.html %}
