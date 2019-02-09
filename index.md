@@ -34,7 +34,6 @@ title: 止止止 - 大千世界
 <https://docs.openstack.org/zh_CN/user-guide/cli-cheat-sheet.html>
 
 
-
 <!--
 联系方式：
 - Email: <liuzc.xhu@aliyun.com>
@@ -46,7 +45,6 @@ title: 止止止 - 大千世界
 
  ![微信公众号二维码](/images/1986-08-29-about-me/my_wechat.jpg)
 -->
-
 
 ---
 {% include disqus.html %}
