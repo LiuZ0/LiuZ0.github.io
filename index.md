@@ -1,10 +1,10 @@
 ---
 layout: page
-title: 宁静致远 - 大千世界
+title: 止止止 - 大千世界
 ---
 ---
 
-![](/images/1986-08-29-about-me/head.jpg)
+```![](/images/1986-08-29-about-me/head.jpg)
 
 
 
