@@ -12,6 +12,7 @@ title: 改变世界 - 个人博客
 
 
 <https://cn.bing.com/>
+<http://bjtime.cn/>
 
 <http://www.weather.com.cn/weather/101270101.shtml>
 
@@ -40,6 +41,5 @@ title: 改变世界 - 个人博客
 - 微信公众号二维码：  
 
   ![微信公众号二维码](/images/1986-08-29-about-me/my_wechat.jpg)
-
 ---
 {% include disqus.html %}
