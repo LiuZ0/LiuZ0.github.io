@@ -1409,14 +1409,14 @@ openstack server list
 
 
 
-#八. 安装和配置swift
-《一》安装和配置控制器节点
+# 八. 安装和配置swift
+##《一》安装和配置控制器节点
 
 <一>前提条件 
 代理服务依赖于身份验证和授权机制，如身份服务。但是，与其他服务不同的是，它还提供了一种内部机制，允许其在没有任何其他OpenStack服务的情况下运行。在配置对象存储服务之前，您必须创建服务凭证和API端点。 
 1.来源admin凭据来访问仅管理员CLI命令：
 
-# . admin-openrc
+. admin-openrc
 
 2.要创建身份服务凭据，请完成以下步骤： 
 A.创建swift用户：
@@ -1438,7 +1438,7 @@ openstack endpoint create --region RegionOne \
   object-store admin http://controller:8080/v1
 
 
-<二>安装和配置的部件
+#<二>安装和配置的部件
 
 1、安装软件包：
 
@@ -1487,8 +1487,6 @@ D.在[filter:keystoneauth]部分中，配置操作员角色：
 use = egg:swift#keystoneauth
 ...
 operator_roles = admin,user
-
-
 
 
 E.在[filter:authtoken]小节中，配置身份服务访问：
@@ -1871,7 +1869,7 @@ openstack object save container2 testfile
 
 
 
-#CentOS7安装OpenStack(Rocky版)-09.安装Cinder存储服务组件（控制节点）
+# CentOS7安装OpenStack(Rocky版)-09.安装Cinder存储服务组件（控制节点）
 ---Cinder install
 
 9.0.Cinder概述
@@ -2298,7 +2296,5 @@ https://docs.openstack.org/zh_CN/user-guide/sdk.html
 
 命令行速查
 https://docs.openstack.org/zh_CN/user-guide/cli-cheat-sheet.html
-
-
 
 
