@@ -1,6 +1,6 @@
 ---
 layout: page
-title: 改变世界 - 个人博客
+title: 宁静致远 - 大千世界
 ---
 ---
 
@@ -35,11 +35,11 @@ title: 改变世界 - 个人博客
 
 联系方式：
 
-- Weibo：[Lingxian_](http://weibo.com/lingxian)
-- Email: <larry@gmail.com>
-- Linkdin: <https://www.linkedin.com/in/lingxian--a1b23610a>
-- 微信公众号二维码：  
+```- Weibo：[Lingxian_](http://weibo.com/lingxian)
+- Email: <liuzc.xhu@aliyun.com>
+```- Linkdin: <https://www.linkedin.com/in/lingxian--a1b23610a>
+```- 微信公众号二维码：  
 
-  ![微信公众号二维码](/images/1986-08-29-about-me/my_wechat.jpg)
+```  ![微信公众号二维码](/images/1986-08-29-about-me/my_wechat.jpg)
 ---
 {% include disqus.html %}
