@@ -1,3 +1,7 @@
+cd /usr/lib/systemd/system/
+ 服务目录
+
+
 
 git add --all
 
@@ -258,7 +262,7 @@ sudo service apache2 restart
 
 
 
-<https://cloud.tencent.com/act/southwest?from=10294>
+https://cloud.tencent.com/act/southwest?from=10294
 
 
 
@@ -268,10 +272,10 @@ lib/lvm
 function _create_lvm_volume_group
 
 复制代码
-$ truncate -s 15G vg_file
-$ sudo losetup -f --show vg_file
+truncate -s 15G vg_file
+sudo losetup -f --show vg_file
 /dev/loop0
-$ sudo vgcreate stack-volumes-lvmdriver-1 /dev/loop0
+sudo vgcreate stack-volumes-lvmdriver-1 /dev/loop0
   No physical volume label read from /dev/loop0
   Physical volume "/dev/loop0" successfully created
   Volume group "stack-volumes-lvmdriver-1" successfully created
@@ -282,6 +286,21 @@ $ sudo vgcreate stack-volumes-lvmdriver-1 /dev/loop0
 created or not. If not execute the below commands:
 
 
+[root@localhost ~]# 
+losetup -f
+/dev/loop0 
+[root@localhost ~]# 
+sudo losetup /dev/loop0 /opt/stack/data/stack-volumes-default-backing-file
+[root@localhost ~]# 
+losetup -f
+/dev/loop1
+[root@localhost ~]# 
+sudo losetup /dev/loop1 /opt/stack/data/stack-volumes-lvmdriver-1-backing-file
+[root@localhost ~]# 
+systemctl restart devstack@c-vol.service
+
+
+
 [root@localhost ~]# losetup -f
 /dev/loop0 
 [root@localhost ~]# sudo losetup /dev/loop0 /opt/stack/data/stack-volumes-default-backing-file
@@ -289,5 +308,80 @@ created or not. If not execute the below commands:
 /dev/loop1
 [root@localhost ~]# sudo losetup /dev/loop1 /opt/stack/data/stack-volumes-lvmdriver-1-backing-file
 [root@localhost ~]# systemctl restart devstack@c-vol.service
+
+
+
+增加交换空间
+dd if=/dev/zero of=/data/swap bs=1024 count=4048000
+mkswap /data/swap 
+swapon /data/swap
+
+/etc/fstab 
+/data/swap     swap     swap    defaults  0 0
+
+mount -a
+
+/etc/nova/nova.conf
+vncserver_proxyclient_address=192.168.2.14
+
+
+
+
+
+
+修改：
+vi 15-horizon_vhost.conf
+添加  ServerAlias 114.116.47.43
+
+
+https://wsgzao.github.io/post/openstack/#
+
+
+
+
+
+1、选择一台CentOS服务器，安装以下软件：
+
+yum install yum-utils createrepo yum-plugin-priorities
+ 
+yum install httpd
+2、开启http服务
+
+systemctl start httpd
+3、获取repo文件并使用reposync同步源
+
+yum install -y http://[rdo.fedorapeople.org/rdo-release.rpm](http://rdo.fedorapeople.org/rdo-release.rpm)
+ 
+yum repolist #可以看到源的id列表
+4、同步openstack-queen这个repo
+
+cd /var/www/html/
+reposync --repoid=openstack-queen
+5、第一次同步时间较长，同步结束后
+
+createrepo –update /var/www/html/openstack-queen
+6、创建完成后，就可以使用web测试：http://[ip]/openstack-icehouse/
+
+7、选择另外一台服务器作为客户机
+
+cd /etc/yum.repos.d
+mv CentOS-Base.repo CentOS-Base.repo_bak
+cp CentOS-Media.repo CentOS-Media.repo_bak
+vim CentOS-Media.repo
+ 
+[openstack-queens]
+name=OpenStack Queens Repository
+baseurl=http://47.98.122.105/openstack-queens/
+enabled=1
+gpgcheck=0
+至此，配置完成，清除缓存并查看软件包
+
+yum clean all
+yum list
+
+
+
+四川移动 +8613800280500 四川联通 +8613010811500
+都+1
 
 
