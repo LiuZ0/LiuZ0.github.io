@@ -20,6 +20,8 @@ title: 止止止 - 大千世界
 
 <https://cn.bing.com/translator>
 
+<https://fanyi.baidu.com/>
+
 
 # 使用仪表盘进行openstack管理
 <https://docs.openstack.org/zh_CN/user-guide/dashboard.html>

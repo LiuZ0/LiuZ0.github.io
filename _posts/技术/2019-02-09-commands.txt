@@ -1,3 +1,4 @@
+https://docs.openstack.org/zh_CN/user-guide/cli.html
 
 OpenStack commands
 
@@ -30,7 +31,7 @@ hostnamectl set-hostname controller
 
 添加主机映射
 cat << EOF >> /etc/hosts
-192.168.0.231 controller
+192.168.0.133 controller
 EOF
 
 
@@ -2374,11 +2375,10 @@ Ubuntu install OpenStack huawei
 http://114.116.42.121/dashboard/
 
 
-
-dd if=/dev/zero of=/data/swap bs=1024 count=4048000
+mkdir /data
+dd if=/dev/zero of=/data/swap bs=1024 count=6048000
 mkswap /data/swap 
 swapon /data/swap
-
 
 /etc/fstab 
 /data/swap     swap     swap    defaults  0 0
@@ -3230,3 +3230,580 @@ $scp -r username@192.168.0.1:/home/username/remotefile.txt
 
 
 
+这是可供参考的常用命令列表
+
+认证 (keystone)¶
+列出所有的用户
+
+$ openstack user list
+列出认证服务目录
+
+$ openstack catalog list
+镜像（glance）¶
+列出您可以访问的镜像
+
+$ openstack image list
+删除指定的镜像
+
+$ openstack image delete IMAGE
+描述一个指定的镜像
+
+$ openstack image show IMAGE
+更新镜像
+
+$ openstack image set IMAGE
+上传内核镜像
+
+$ openstack image create "cirros-threepart-kernel" \
+  --disk-format aki --container-format aki --public \
+  --file ~/images/cirros-0.3.5-x86_64-kernel
+上传RAM镜像
+
+$ openstack image create "cirros-threepart-ramdisk" \
+  --disk-format ari --container-format ari --public \
+  --file ~/images/cirros-0.3.5-x86_64-initramfs
+上传第三方镜像
+
+$ openstack image create "cirros-threepart" --disk-format ami \
+  --container-format ami --public \
+  --property kernel_id=$KID-property ramdisk_id=$RID \
+  --file ~/images/cirros-0.3.5-x86_64-rootfs.img
+注册raw镜像
+
+$ openstack image create "cirros-raw" --disk-format raw \
+  --container-format bare --public \
+  --file ~/images/cirros-0.3.5-x86_64-disk.img
+计算 (nova)¶
+列出实例，核实实例状态
+
+$ openstack server list
+列出镜像
+
+$ openstack image list
+Create a flavor named m1.tiny
+
+$ openstack flavor create --ram 512 --disk 1 --vcpus 1 m1.tiny
+列出规格类型
+
+$ openstack flavor list
+用类型和镜像名称(如果名称唯一)来启动云主机
+
+$ openstack server create --image IMAGE --flavor FLAVOR INSTANCE_NAME
+$ openstack server create --image cirros-0.3.5-x86_64-uec --flavor m1.tiny \
+  MyFirstInstance
+Log in to the instance (from Linux)
+
+ 注解
+
+The ip command is available only on Linux. Using ip netns provides your environment a copy of the network stack with its own routes, firewall rules, and network devices for better troubleshooting.
+
+# ip netns
+# ip netns exec NETNS_NAME ssh USER@SERVER
+# ip netns exec qdhcp-6021a3b4-8587-4f9c-8064-0103885dfba2 \
+  ssh cirros@10.0.0.2
+ 注解
+
+In CirrOS, the password for user cirros is cubswin:). For any other operating system, use SSH keys.
+
+Log in to the instance with a public IP address (from Mac)
+
+$ ssh cloud-user@128.107.37.150
+显示实例详细信息
+
+openstack server show NAME
+$ openstack server show MyFirstInstance
+查看云主机的控制台日志
+
+openstack console log show MyFirstInstance
+设置云主机的元数据
+
+$ nova meta volumeTwoImage set newmeta='my meta data'
+创建一个实例快照
+
+$ openstack image create volumeTwoImage snapshotOfVolumeImage
+$ openstack image show snapshotOfVolumeImage
+实例的暂停、挂起、停止、救援、调整规格、重建、重启¶
+暂停
+
+$ openstack server pause NAME
+$ openstack server pause volumeTwoImage
+取消挂起
+
+$ openstack server unpause NAME
+挂起
+
+$ openstack server suspend NAME
+Unsuspend
+
+$ openstack server resume NAME
+关机
+
+$ openstack server stop NAME
+开始
+
+$ openstack server start NAME
+恢复
+
+$ openstack server rescue NAME
+$ openstack server rescue NAME --rescue_image_ref RESCUE_IMAGE
+调整大小
+
+$ openstack server resize NAME FLAVOR
+$ openstack server resize my-pem-server m1.small
+$ openstack server resize --confirm my-pem-server1
+重建
+
+$ openstack server rebuild NAME IMAGE
+$ openstack server rebuild newtinny cirros-qcow2
+重启
+
+$ openstack server reboot NAME
+$ openstack server reboot newtinny
+将用户数据和文件注入到实例
+
+$ openstack server create --user-data FILE INSTANCE
+$ openstack server create --user-data userdata.txt --image cirros-qcow2 \
+  --flavor m1.tiny MyUserdataInstance2
+使用ssh连接到实例，查看``/var/lib/cloud``验证文件是否成功注入
+
+给实例注入一个密钥对并通过密钥对来访问实例
+
+创建秘钥对
+
+$ openstack keypair create test > test.pem
+$ chmod 600 test.pem
+启动实例
+
+$ openstack server create --image cirros-0.3.5-x86_64 --flavor m1.small \
+  --key-name test MyFirstServer
+使用ssh连接到实例
+
+# ip netns exec qdhcp-98f09f1e-64c4-4301-a897-5067ee6d544f \
+  ssh -i test.pem cirros@10.0.0.4
+管理安全组
+
+在默认的安全组中，添加ping和SSH规则
+
+$ openstack security group rule create default \
+    --remote-group default --protocol icmp
+$ openstack security group rule create default \
+    --remote-group default --dst-port 22
+网络 (neutron)¶
+创建网络
+
+$ openstack network create NETWORK_NAME
+创建子网
+
+$ openstack subnet create --subnet-pool SUBNET --network NETWORK SUBNET_NAME
+$ openstack subnet create --subnet-pool 10.0.0.0/29 --network net1 subnet1
+块存储(cinder)¶
+用于管理连接到实例的卷和卷快照。
+
+创建一个新卷
+
+$ openstack volume create --size SIZE_IN_GB NAME
+$ openstack volume create --size 1 MyFirstVolume
+启动实例并将它链接到卷上
+
+$ openstack server create --image cirros-qcow2 --flavor m1.tiny MyVolumeInstance
+列出所有卷，注意卷状态
+
+$ openstack volume list
+当实例为正常状态且卷为可用状态时，将卷连接到实例。
+
+$ openstack server add volume INSTANCE_ID VOLUME_ID
+$ openstack server add volume MyVolumeInstance 573e024d-5235-49ce-8332-be1576d323f8
+ 注解
+
+在Xen Hypervisor可以指定具体的设备名，而不使用自动分配的名称，例如：
+
+$ openstack server add volume --device /dev/vdb MyVolumeInstance 573e024d..1576d323f8
+
+This is not currently possible when using non-Xen hypervisors with OpenStack.
+登陆进实例之后管理卷组
+
+列出存储器
+
+# fdisk -l
+在卷上建立文件系统
+
+# mkfs.ext3 /dev/vdb
+创建一个挂载点
+
+# mkdir /myspace
+在挂载点挂载卷
+
+# mount /dev/vdb /myspace
+在卷上创建一个文件
+
+# touch /myspace/helloworld.txt
+# ls /myspace
+卸载卷
+
+# umount /myspace
+对象存储(Swift)¶
+展示账户，容器以及对象的信息
+
+$ swift stat
+$ swift stat ACCOUNT
+$ swift stat CONTAINER
+$ swift stat OBJECT
+列出容器
+
+$ swift list
+
+
+
+openstack compute service list
+
+查看网络服务的命令
+openstack network agent list
+
+
+展示所有租户
+openstack project list
+
+创建租户
+openstack project create --description 'Project description' project-name
+
+
+更新租户名称
+openstack project set ID/name --name project-new
+
+删除租户
+openstack project delete project-name
+
+展示所有用户
+openstack user list
+
+添加用户
+openstack user create --password name 该方式指定密码字符串
+openstack user create --password-prompt name 该方式交互式填入密码
+
+禁止用户
+openstack user set user_name --disable
+
+启用用户
+openstack user set user_name --enable
+
+更新用户名
+openstack user set user_name --name username_new
+
+删除用户
+openstack user delete user_name
+
+展示所有角色
+openstack role list
+
+
+创建新的角色
+openstack role create new_role
+
+综合：将某某用户添加到某某角色下
+openstack role add --user user_name --project project_name role_name
+
+显示结果
+openstack role list --user user_name --peoject project_name
+
+
+创建一个镜像
+openstack image create --disk-format 参数 --public --file 参数 image_name
+
+查看安全组
+openstack group list
+
+增加安全组
+openstack group create group_name --description ""
+
+
+查看openstack环境主机数量
+openstack host list
+
+查看某一台主机资源情况
+openstack host show host_name
+
+查看主机网络服务
+openstack network agent list
+
+查看端口信息
+openstack port list
+
+查看网络信息
+openstack network list
+
+创建外网
+openstack network create --external outsidenet
+
+创建外网子网
+openstack subnet create --allocation-pool start=88.88.88.2,end=88.88.88.80 --subnet-range 88.88.88.0/24 --network outsidenet subnet_name
+
+创建内网
+openstack network create --internal --provider-network-type gre insidenet
+
+创建内网子网
+openstack subnet create --subnet-range 20.0.0.0/24 --network insidenet --dns-nameserver 114.114.114.114 provider_subent
+
+创建路由器
+openstack router create router_name
+
+路由器连接子网
+opens= tack router add subnet router_demo insidesubnet
+
+路由器设置网关
+openstack router set --external-gateway outsidenet router_name
+
+3.5 虚机管理
+查看虚拟机数量
+openstack server list
+
+创建虚拟机
+启动一个虚拟机必要的信息是镜像，规格，网络。从前面学习到的image操作中找到镜像，从flavor操作中找到合适的规格，从网络操作中找到网络。
+openstack server create --image cirros --flavor small --nic net-id=insidenet VM_name
+
+虚拟机暂停
+openstack server pause VM_name
+
+虚拟机启动
+openstack server unpause VM_name
+
+虚拟机重启
+openstack server reboot VM_name
+
+OPENSTACK 命令行客户端
+https://docs.openstack.org/zh_CN/user-guide/cli.html
+
+
+
+
+
+
+
+
+1、选择一台CentOS服务器，安装以下软件：
+yum install yum-utils createrepo yum-plugin-priorities
+yum install httpd
+2、开启http服务
+
+systemctl start httpd
+
+3、获取repo文件并使用reposync同步源
+yum install -y http://[rdo.fedorapeople.org/rdo-release.rpm](http://rdo.fedorapeople.org/rdo-release.rpm)
+yum repolist #可以看到源的id列表
+4、同步openstack-queen这个repo
+cd /var/www/html/
+reposync --repoid=openstack-queen
+5、第一次同步时间较长，同步结束后
+
+createrepo –update /var/www/html/openstack-queen
+
+6、创建完成后，就可以使用web测试：http://[ip]/openstack-icehouse/
+http://114.115.235.66/openstack-rocky/
+
+http://192.168.0.61/openstack-rocky/
+
+
+7、选择另外一台服务器作为客户机
+cd /etc/yum.repos.d
+mv CentOS-Base.repo CentOS-Base.repo_bak
+cp CentOS-Media.repo CentOS-Media.repo_bak
+vim CentOS-Media.repo
+[openstack-queens]
+name=OpenStack Queens Repository
+baseurl=http://47.98.122.105/openstack-queens/
+enabled=1
+gpgcheck=0
+至此，配置完成，清除缓存并查看软件包
+yum clean all
+yum list
+
+
+
+
+HOT模板举例-部署一个简单实例
+heat_template_version: 2015-04-30  # heat模板版本必须有
+
+description: #描述项是可选的，建议添加详细描述
+
+resources:  # resources选项是必须的
+
+  my_instance:
+
+    type: OS::Nova::Server
+
+    properties:
+
+      key_name: my_key
+
+      image: ubuntu-trusty-x86_64
+
+      flavor: m1.small
+ 
+
+5，模板举例-使用parameters参数
+heat_template_version: 2015-04-30
+
+description: Simple template to deploy a single compute instance
+
+parameters:
+
+  image_id:
+
+    type: string
+
+    label: Image ID
+
+    description: Image to be used for compute instance
+
+  flavor:
+
+    type: string
+
+    label: Instance Type
+
+    description: Type of instance (flavor) to be used
+
+    default: m1.small  # 如果用户没有为参数定义值，则在stack部署期间使用默认值。 如果模板没有为参数定义默认值，那么用户必须定义该值，否则stack创建失败。
+
+    constraints:
+
+      - allowed_values: [ m1.medium, m1.large, m1.xlarge ] # 约束列表限制输入参数的值
+
+        description: Value must be one of m1.medium, m1.large or m1.xlarge.
+
+resources:
+
+  my_instance:
+
+    type: OS::Nova::Server
+
+    properties:
+
+      image: { get_param: image_id }
+
+      flavor: { get_param: flavor }
+
+ 
+
+二，Heat功能应用
+ 
+
+1，stack核心命令
+heat stack-create / openstack stack create
+
+heat stack-update / openstack stack update
+
+heat stack-list / openstack stack list
+
+heat stack-show / openstack stack show
+
+heat stack-delete / openstack stack delete
+
+heat output-list / openstack stack output list
+
+heat output-show / openstack stack output show
+
+ 
+
+2，stack其它命令
+ 
+
+heat stack-abandon / openstack stack abandon
+
+heat stack-adopt / openstack stack adopt
+
+heat stack-cancel-update / openstack stack update cancel
+
+heat stack-preview / openstack stack update --dry-run
+
+heat action-check / openstack stack check
+
+heat action-resume / openstack stack resume
+
+heat action-suspend / openstack stack suspend
+
+heat hook-clear / openstack stack hook clear
+
+heat hook-poll / openstack stack hook poll
+
+ 
+
+3，resource相关命令
+heat resource-list / openstack stack resource list
+
+heat resource-metadata / openstack stack resource metadata show
+
+heat resource-show / openstack stack resource show
+
+heat resource-signal / openstack stack resource signal
+
+heat resource-type-list / openstack orchestration resource type list
+
+heat resource-type-show / openstack orchestration resource type show
+
+ 
+
+4，template相关命令
+heat template-show  / openstack stack template show
+
+heat template-validate  / openstack stack create --dry-run
+
+heat template-version-list / openstack orchestration template version list
+
+heat resource-type-template / openstack orchestration resource type show --format (hot|cfn)
+
+ 
+
+5，event相关命令
+heat event-list / openstack stack event list
+
+heat event-show / openstack stack event show
+
+ 
+
+6，软件配置命令
+heat config-create / openstack software config create
+
+heat config-delete / openstack software config delete
+
+heat config-show / openstack software config show
+
+heat config-list / openstack software config list
+
+heat deployment-create / openstack software deployment create
+
+heat deployment-delete / openstack software deployment delete
+
+heat deployment-list / openstack software deployment list
+
+heat deployment-metadata-show / openstack software deployment metadata show
+
+heat deployment-output-show / openstack software deployment output show
+
+heat deployment-show / openstack software deployment show
+
+ 
+
+7，stack快照命令
+heat stack-restore / openstack stack snapshot restore
+
+heat stack-snapshot / openstack stack snapshot create
+
+heat snapshot-delete / openstack stack snapshot delete
+
+heat snapshot-list / openstack stack snapshot list
+
+heat snapshot-show / openstack stack snapshot show
+
+ 
+
+8，其它命令
+heat build-info / openstack orchestration build-info
+
+heat service-list / openstack service list (need to integrate with existing command)
+
+ 
+
+常见操作链接：
+
+https://docs.openstack.org/python-heatclient/latest/cli/index.html
+https://specs.openstack.org/openstack/heat-specs/specs/mitaka/python-openstackclient.html
