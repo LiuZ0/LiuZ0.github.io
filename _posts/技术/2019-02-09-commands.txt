@@ -8,8 +8,6 @@ unstack.sh
 stack.sh
 
 
-
-
 预准备
 root用户下执行
 mkdir ~/.pip&&vi ~/.pip/pip.conf
@@ -56,13 +54,10 @@ SERVICE_PASSWORD=$ADMIN_PASSWORD
 
 
 
-
 RDO  install OpenStack Rocky
-
 关闭防火墙
 
 systemctl stop firewalld
-
 systemctl disable firewalld
 
 setenforce 0
@@ -1642,7 +1637,6 @@ lock file = /var/lock/object.lock
 
 
 7、开始rsyncd服务并将其配置为在系统启动时启动：
-
 systemctl enable rsyncd.service
 systemctl start rsyncd.service    
 
@@ -3453,7 +3447,6 @@ $ swift stat OBJECT
 $ swift list
 
 
-
 openstack compute service list
 
 查看网络服务的命令
@@ -3807,3 +3800,237 @@ heat service-list / openstack service list (need to integrate with existing comm
 
 https://docs.openstack.org/python-heatclient/latest/cli/index.html
 https://specs.openstack.org/openstack/heat-specs/specs/mitaka/python-openstackclient.html
+
+source devstatck/openrc admin admin
+
+
+screen -x stack
+sudo journalctl -f -u devstack@n-cond.service
+sudo journalctl -f -u devstack@h*
+tail -f /var/log/syslog
+
+
+每个虚拟机对应一个qemu-kvm进程,同其他进程一样被调度。
+ps -ef|grep qemu
+virsh list
+
+每个虚拟进会产生多个线程（cpu）在物理cpu上运行。
+超配：虚拟机cpu数 > 物理cpu数。
+
+KVM负责实现VA（虚拟内存）-》PA（物理内存）-》 MA（机器内存）的地址映射。
+内存也可以超配，虚拟机内存数 大于 实际内存数。
+
+sudo ls -l /var/lib/libvirt/images/
+
+sudo vgdisplay
+
+linux bridge 是linux上tcpip的二层协议交换设备，类似二层交换机或hub。
+
+eth0 接收后 发送 br0， br0在转发给vnet0. VM1虚拟机1就能接收到外网数据。
+
+LAN （local area network）本地局域网，使用hub、switch连接lan中的计算机。
+
+VLAN是 Virtual Lan
+
+Linux bridge + VLAN=虚拟交换机
+
+OpenStack 是分布式系统，服务可以分布部署，组件也可以分布部署。
+
+
+image存储位置
+filesystem_store_datadir=/var/lib/glance/images/
+/etc/glance/glance-api.conf
+
+
+nova-conductor 负责管理数据库
+
+
+nova.conf
+compute_driver=libvirt.LibvirtDriver
+
+虚拟机资源信息
+novish nodeinfo
+
+/etc/nova/nova.conf
+instance_spath = /opt/stack/data/nova/instances
+/var/lib/nova/instances/0185fefe-bdca-4a0a-885b-db1ba259a862
+base_dir_name = _base
+
+/var/lib/nova 是nova虚拟机存放目录
+/opt/stack/data/nova 是ubuntu虚拟机存放目录
+
+cinder 存在于那些节点
+cinder service-list
+
+
+more /etc/cinder/cinder.conf |grep volume_
+volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
+
+
+os endpoint list
+os endpoint show f71f85e9532246668fa15e7e7c8a7726
+
+
+逻辑卷管理LVM是一个多才多艺的硬盘系统工具
+传统分区使用固定大小分区，重新调整大小十分麻烦。但是，LVM可以创建和管理“逻辑”卷，而不是直接使用物理硬盘。
+
+sudo journalctl -f -u devstack@n-cond.service
+
+cinder 驱动
+
+centos
+/usr/lib/python2.7/site-packages/cinder/volume/drivers
+
+
+ubuntu 
+root@xihua3-0004:/opt/stack/devstack# ls -l /opt/stack/cinder/cinder/volume/drivers/
+total 1072
+drwxr-xr-x 2 stack stack   4096 Feb 10 22:01 dothill
+-rw-r--r-- 1 stack stack  42105 Feb 10 22:01 drbdmanagedrv.py
+....
+创建卷源码
+cd /opt/stack/cinder/cinder/volume/flows/api/
+create_volume.py
+
+
+
+yuantong
+804317716173670838
+
+
+
+
+
+
+
+
+
+
+https://blog.csdn.net/wllabs/article/details/79064094
+
+
+FENET是一种安全的消息传递格式，已被国外的一些公司用于API token中。解决了OpenStack面临的许多相同问题。它们的非持久的、轻量级的特性可以降低运行云所需的开销。
+
+fernet_token格式如下：
+
+gAAAAABaVhKmk-inDnXQjDU-w6bw4BHhVhTAIOIspvGV6vZXHh8P9Kd6FMYdXeR6R8z_JfccBZxyTfooHvomBGhsrodIhWpAkL3lf-bqsAxr9byzPPQyyoHfp_IlOh2OgSngyt9NFVu39Sj4CM_vcInpBOCdMzMeGT7D0BRpyDC-6ziRpTmBlak
+ 
+
+ 
+
+非持久化：不像UUID的token，fernet tokens 不需要被持久化到数据库。
+
+是的!这意味着这个token将是永远是可以用的：
+
+> SELECT * FROM `token`;
+Empty set (0.00 sec)
+ 
+
+ 
+
+轻量级：与 PKI token 相比，他们比较短，偏向于最小的身份信息和动态授权环境。
+
+它们通常在180到240字节的范围内。从客户端的角度来看，您可以将它们完全视为 UUID token。
+
+ 
+
+对称加密：Fernet 使用 AES-CBC 加密，并使用 SHA256 HMAC 进行签名。
+
+简而言之，OpenStack的身份验证和授权元数据都被打包成一个包，然后将其加密并签名为 Fernet token。 OpenStack 支持 三阶段 密钥循环模型，能有效支持密钥的轮询切换和替代。
+
+ 
+
+Fernet tokens 包含些什么？
+Fernet tokens 包含最少的身份和授权信息：刚好可以让 keystone 实现完整的 token 验证。
+
+在一般情况下（project-scoped token），一个token 会包含一个user id 和 一个 project id，以及一些元数据，如令牌创建时间戳，token时间周期，审计ID和认证方法。 domain-scoped token 会包含 domain ID而不是 project ID。 基于信任的token 将包含信任标识。 基于联合的 token 将包含 有关联盟本身的信息。
+
+除了 token 创建时间戳以外，所有这些都是加密的，因为它是 fernet token 加密消息 的一部分。 fernet 做为包含这些信息的载体，fernet的更多细节可以参考这个https://github.com/fernet/spec/blob/master/Spec.md。
+
+如果你想查看一个 fernet 内容，在打包和解包中你将会体会到fernet token 有多复杂和精密。
+
+ 
+
+Fernet令牌有多大？
+下面可以看一个 project-scoped Fernet token：
+
+gAAAAABaVhKmk-inDnXQjDU-w6bw4BHhVhTAIOIspvGV6vZXHh8P9Kd6FMYdXeR6R8z_JfccBZxyTfooHvomBGhsrodIhWpAkL3lf-bqsAxr9byzPPQyyoHfp_IlOh2OgSngyt9NFVu39Sj4CM_vcInpBOCdMzMeGT7D0BRpyDC-6ziRpTmBlak
+上面就只有186个字节，通常都会控制在255字节内。虽然255字节没有硬性限制，并且很长的token虽然存储到数据库里不是什么问题，但是长的 token 用户体验不好。 也有不好的事情，比如一些非UUID的用户可能会有额外的安全风险。
+
+更另人吃惊的是，如果一个用户属于多个组，有可能是属于无穷多的组的时候，这个fernet token就也会相应的很庞大，不过现实私有云环境中，也不太可能一个用户属于3个组以上。
+
+不过如果你将user 分配到二个不同的组，你很快就会看到 Fernet token 的长度迅速增加。
+
+ 
+
+Fernet令牌可以离线验证吗？
+可以进行一些离线验证，例如验证 token 是否是正确的 Fernet token，并验证创建日期。 但是，如果没有签名密钥或加密密钥，就不能离线验证了。
+
+ 
+
+性能怎么样？
+Fernet token 的性能比 UUID token 快 85％，比 PKI token 快89％。 
+
+ 
+
+怎么配置并使用 Fernet？
+只需要以下几步。
+
+1，通过更改 keystone.conf 中[token]下的 provider：
+
+[token]
+provider = fernet
+ 
+
+2，初始化密钥库：
+
+mkdir /etc/keystone/fernet-keys/
+keystone-manage fernet_setup
+
+初始化密钥库后，会在 key_repository 里生成一对密钥：一个staged key 用于解密tokens，一个 primary key 用于加密token。
+
+ 
+
+3，在部署多节点 keystone 集群时，这时候需要将  key_repository /etc/keystone/fernet-keys/  里的目录和文件 复制到每个其他的keystone节点相对应的目录上。这样确实可以用 fernet token 可以在不同的节点上使用相当的密钥进行解密。
+
+
+
+[root@controller ~]# python token_test.py gAAAAABcZ4HeriL4pF1UsZWPZEzEyrEtGYPQVupehNnsiD6_GY1dvu5mnZAaHH8T8X4VQeoWUAUB3pUzKofh89AmCkPKcWenyqJFOxtuIjVsQMd68F7mfzKrhl4aerx0PBuvhnk3Omh9_6R5BxrZIqTxDD06tp7wFUEnu1XhwCP0dNLgdK0lSkY
+raw token info:
+[2, [True, '\xffFA\x84\x80\xffN\xc1\xb9\xce\x90A7q\xaf\xde'], 2, [True, '\x05u0\xcdA\xcdJ\xee\xa9la\x19\xd1a?\xa9'], 1550290926.0, ['i\x81\x07\xb9\xd3\xa5KA\xb2r\xa0\x87Y\x1dR.']]
+=================================================
+unpack token:
+user_id = ff46418480ff4ec1b9ce90413771afde
+project_id = 057530cd41cd4aeea96c6119d1613fa9
+expired_at = 2019-02-16 12:22:06
+['aYEHudOlS0GycqCHWR1SLg']
+[root@controller ~]# 
+
+[root@controller ~]# openstack user list
++----------------------------------+-----------+
+| ID                               | Name      |
++----------------------------------+-----------+
+| 432f99f94de7444a9d9c71ab4231b59d | neutron   |
+| 5c7bcc9560ee44d298191ba768c235a5 | glance    |
+| 8d4732ed2fee49c7ab4c1e51c41e6bfd | nova      |
+| ada067ef765e42298b090cf946cc108b | myuser    |
+| af09bef7ba6849e7849dea2817f7a1bf | placement |
+| b25d1ac335694d9fafc209fe2bf1f59c | cinder    |
+| ff46418480ff4ec1b9ce90413771afde | admin     |
++----------------------------------+-----------+
+
+[root@controller ~]# openstack project list
++----------------------------------+-----------+
+| ID                               | Name      |
++----------------------------------+-----------+
+| 057530cd41cd4aeea96c6119d1613fa9 | admin     |
+| 0dc85e9b92244c82bf70d4e218578aed | service   |
+| 471f29df1f73428c9b5fdd8421e42feb | myproject |
++----------------------------------+-----------+
+
+
+
+腾讯将加入 OpenStack 基金会 ，成为黄金会员。
+腾讯的 TStack 私有云已经运行着 14 个 OpenStack 集群，总计有 6000 个节点。
+这样的配置支持约 1 亿用户，腾讯宣布这一平台的可用性达到 99.99%。
+腾讯是全球最大的 OpenStack 用户之一。
