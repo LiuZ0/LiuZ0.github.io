@@ -56,7 +56,6 @@ SERVICE_PASSWORD=$ADMIN_PASSWORD
 
 RDO  install OpenStack Rocky
 关闭防火墙
-
 systemctl stop firewalld
 systemctl disable firewalld
 
@@ -4034,3 +4033,352 @@ expired_at = 2019-02-16 12:22:06
 腾讯的 TStack 私有云已经运行着 14 个 OpenStack 集群，总计有 6000 个节点。
 这样的配置支持约 1 亿用户，腾讯宣布这一平台的可用性达到 99.99%。
 腾讯是全球最大的 OpenStack 用户之一。
+
+
+
+
+Create initial networks¶
+The configuration supports one flat or multiple VLAN provider networks. For simplicity, the following procedure creates one flat provider network.
+
+Source the administrative project credentials.
+
+Create a flat network.
+
+openstack network create --share --provider-physical-network provider \
+  --provider-network-type flat provider1
+
+$ openstack network create --share --provider-physical-network provider \
+  --provider-network-type flat provider1
++---------------------------+-----------+-
+| Field                     | Value     |
++---------------------------+-----------+
+| admin_state_up            | UP        |
+| mtu                       | 1500      |
+| name                      | provider1 |
+| port_security_enabled     | True      |
+| provider:network_type     | flat      |
+| provider:physical_network | provider  |
+| provider:segmentation_id  | None      |
+| router:external           | Internal  |
+| shared                    | True      |
+| status                    | ACTIVE    |
++---------------------------+-----------+
+ Note
+
+The share option allows any project to use this network. To limit access to provider networks, see Role-Based Access Control (RBAC).
+
+ Note
+
+To create a VLAN network instead of a flat network, change --provider:network_type flat to --provider-network-type vlan and add --provider-segment with a value referencing the VLAN ID.
+
+Create a IPv4 subnet on the provider network.
+
+$ openstack subnet create --subnet-range 203.0.113.0/24 --gateway 203.0.113.1 \
+  --network provider1 --allocation-pool start=203.0.113.11,end=203.0.113.250 \
+  --dns-nameserver 8.8.4.4 provider1-v4
++-------------------+----------------------------+
+| Field             | Value                      |
++-------------------+----------------------------+
+| allocation_pools  | 203.0.113.11-203.0.113.250 |
+| cidr              | 203.0.113.0/24             |
+| dns_nameservers   | 8.8.4.4                    |
+| enable_dhcp       | True                       |
+| gateway_ip        | 203.0.113.1                |
+| ip_version        | 4                          |
+| name              | provider1-v4               |
++-------------------+----------------------------+
+ Note
+
+Enabling DHCP causes the Networking service to provide DHCP which can interfere with existing DHCP services on the physical network infrastructure.
+
+Create a IPv6 subnet on the provider network.
+
+$ openstack subnet create --subnet-range fd00:203:0:113::/64 --gateway fd00:203:0:113::1 \
+  --ip-version 6 --ipv6-address-mode slaac --network provider1 \
+  --dns-nameserver 2001:4860:4860::8844 provider1-v6
++-------------------+------------------------------------------------------+
+| Field             | Value                                                |
++-------------------+------------------------------------------------------+
+| allocation_pools  | fd00:203:0:113::2-fd00:203:0:113:ffff:ffff:ffff:ffff |
+| cidr              | fd00:203:0:113::/64                                  |
+| dns_nameservers   | 2001:4860:4860::8844                                 |
+| enable_dhcp       | True                                                 |
+| gateway_ip        | fd00:203:0:113::1                                    |
+| ip_version        | 6                                                    |
+| ipv6_address_mode | slaac                                                |
+| ipv6_ra_mode      | None                                                 |
+| name              | provider1-v6                                         |
++-------------------+------------------------------------------------------+
+ Note
+
+The Networking service uses the layer-3 agent to provide router advertisement. Provider networks rely on physical network infrastructure for layer-3 services rather than the layer-3 agent. Thus, the physical network infrastructure must provide router advertisement on provider networks for proper operation of IPv6.
+
+Verify network operation¶
+On each compute node, verify creation of the qdhcp namespace.
+
+# ip netns
+qdhcp-8b868082-e312-4110-8627-298109d4401c
+Source a regular (non-administrative) project credentials.
+
+Create the appropriate security group rules to allow ping and SSH access instances using the network.
+
+$ openstack security group rule create --proto icmp default
++------------------+-----------+
+| Field            | Value     |
++------------------+-----------+
+| direction        | ingress   |
+| ethertype        | IPv4      |
+| protocol         | icmp      |
+| remote_ip_prefix | 0.0.0.0/0 |
++------------------+-----------+
+
+$ openstack security group rule create --ethertype IPv6 --proto ipv6-icmp default
++-----------+-----------+
+| Field     | Value     |
++-----------+-----------+
+| direction | ingress   |
+| ethertype | IPv6      |
+| protocol  | ipv6-icmp |
++-----------+-----------+
+
+$ openstack security group rule create --proto tcp --dst-port 22 default
++------------------+-----------+
+| Field            | Value     |
++------------------+-----------+
+| direction        | ingress   |
+| ethertype        | IPv4      |
+| port_range_max   | 22        |
+| port_range_min   | 22        |
+| protocol         | tcp       |
+| remote_ip_prefix | 0.0.0.0/0 |
++------------------+-----------+
+
+$ openstack security group rule create --ethertype IPv6 --proto tcp --dst-port 22 default
++------------------+-----------+
+| Field            | Value     |
++------------------+-----------+
+| direction        | ingress   |
+| ethertype        | IPv6      |
+| port_range_max   | 22        |
+| port_range_min   | 22        |
+| protocol         | tcp       |
++------------------+-----------+
+Launch an instance with an interface on the provider network. For example, a CirrOS image using flavor ID 1.
+
+$ openstack server create --flavor 1 --image cirros \
+  --nic net-id=NETWORK_ID provider-instance1
+Replace NETWORK_ID with the ID of the provider network.
+
+Determine the IPv4 and IPv6 addresses of the instance.
+
+$ openstack server list
++--------------------------------------+--------------------+--------+------------------------------------------------------------+------------+
+| ID                                   | Name               | Status | Networks                                                   | Image Name |
++--------------------------------------+--------------------+--------+------------------------------------------------------------+------------+
+| 018e0ae2-b43c-4271-a78d-62653dd03285 | provider-instance1 | ACTIVE | provider1=203.0.113.13, fd00:203:0:113:f816:3eff:fe58:be4e | cirros     |
++--------------------------------------+--------------------+--------+------------------------------------------------------------+------------+
+On the controller node or any host with access to the provider network, ping the IPv4 and IPv6 addresses of the instance.
+
+$ ping -c 4 203.0.113.13
+PING 203.0.113.13 (203.0.113.13) 56(84) bytes of data.
+64 bytes from 203.0.113.13: icmp_req=1 ttl=63 time=3.18 ms
+64 bytes from 203.0.113.13: icmp_req=2 ttl=63 time=0.981 ms
+64 bytes from 203.0.113.13: icmp_req=3 ttl=63 time=1.06 ms
+64 bytes from 203.0.113.13: icmp_req=4 ttl=63 time=0.929 ms
+
+--- 203.0.113.13 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3002ms
+rtt min/avg/max/mdev = 0.929/1.539/3.183/0.951 ms
+
+$ ping6 -c 4 fd00:203:0:113:f816:3eff:fe58:be4e
+PING fd00:203:0:113:f816:3eff:fe58:be4e(fd00:203:0:113:f816:3eff:fe58:be4e) 56 data bytes
+64 bytes from fd00:203:0:113:f816:3eff:fe58:be4e icmp_seq=1 ttl=64 time=1.25 ms
+64 bytes from fd00:203:0:113:f816:3eff:fe58:be4e icmp_seq=2 ttl=64 time=0.683 ms
+64 bytes from fd00:203:0:113:f816:3eff:fe58:be4e icmp_seq=3 ttl=64 time=0.762 ms
+64 bytes from fd00:203:0:113:f816:3eff:fe58:be4e icmp_seq=4 ttl=64 time=0.486 ms
+
+--- fd00:203:0:113:f816:3eff:fe58:be4e ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 2999ms
+rtt min/avg/max/mdev = 0.486/0.796/1.253/0.282 ms
+
+
+
+
+Verify network operation¶
+On each compute node, verify creation of the qdhcp namespace.
+
+# ip netns
+qdhcp-8b868082-e312-4110-8627-298109d4401c
+Source a regular (non-administrative) project credentials.
+
+Create the appropriate security group rules to allow ping and SSH access instances using the network.
+
+$ openstack security group rule create --proto icmp default
++------------------+-----------+
+| Field            | Value     |
++------------------+-----------+
+| direction        | ingress   |
+| ethertype        | IPv4      |
+| protocol         | icmp      |
+| remote_ip_prefix | 0.0.0.0/0 |
++------------------+-----------+
+
+$ openstack security group rule create --ethertype IPv6 --proto ipv6-icmp default
++-----------+-----------+
+| Field     | Value     |
++-----------+-----------+
+| direction | ingress   |
+| ethertype | IPv6      |
+| protocol  | ipv6-icmp |
++-----------+-----------+
+
+$ openstack security group rule create --proto tcp --dst-port 22 default
++------------------+-----------+
+| Field            | Value     |
++------------------+-----------+
+| direction        | ingress   |
+| ethertype        | IPv4      |
+| port_range_max   | 22        |
+| port_range_min   | 22        |
+| protocol         | tcp       |
+| remote_ip_prefix | 0.0.0.0/0 |
++------------------+-----------+
+
+$ openstack security group rule create --ethertype IPv6 --proto tcp --dst-port 22 default
++------------------+-----------+
+| Field            | Value     |
++------------------+-----------+
+| direction        | ingress   |
+| ethertype        | IPv6      |
+| port_range_max   | 22        |
+| port_range_min   | 22        |
+| protocol         | tcp       |
++------------------+-----------+
+Launch an instance with an interface on the provider network. For example, a CirrOS image using flavor ID 1.
+
+$ openstack server create --flavor 1 --image cirros \
+  --nic net-id=NETWORK_ID provider-instance1
+Replace NETWORK_ID with the ID of the provider network.
+
+Determine the IPv4 and IPv6 addresses of the instance.
+
+$ openstack server list
++--------------------------------------+--------------------+--------+------------------------------------------------------------+------------+
+| ID                                   | Name               | Status | Networks                                                   | Image Name |
++--------------------------------------+--------------------+--------+------------------------------------------------------------+------------+
+| 018e0ae2-b43c-4271-a78d-62653dd03285 | provider-instance1 | ACTIVE | provider1=203.0.113.13, fd00:203:0:113:f816:3eff:fe58:be4e | cirros     |
++--------------------------------------+--------------------+--------+------------------------------------------------------------+------------+
+On the controller node or any host with access to the provider network, ping the IPv4 and IPv6 addresses of the instance.
+
+$ ping -c 4 203.0.113.13
+PING 203.0.113.13 (203.0.113.13) 56(84) bytes of data.
+64 bytes from 203.0.113.13: icmp_req=1 ttl=63 time=3.18 ms
+64 bytes from 203.0.113.13: icmp_req=2 ttl=63 time=0.981 ms
+64 bytes from 203.0.113.13: icmp_req=3 ttl=63 time=1.06 ms
+64 bytes from 203.0.113.13: icmp_req=4 ttl=63 time=0.929 ms
+
+--- 203.0.113.13 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3002ms
+rtt min/avg/max/mdev = 0.929/1.539/3.183/0.951 ms
+
+$ ping6 -c 4 fd00:203:0:113:f816:3eff:fe58:be4e
+PING fd00:203:0:113:f816:3eff:fe58:be4e(fd00:203:0:113:f816:3eff:fe58:be4e) 56 data bytes
+64 bytes from fd00:203:0:113:f816:3eff:fe58:be4e icmp_seq=1 ttl=64 time=1.25 ms
+64 bytes from fd00:203:0:113:f816:3eff:fe58:be4e icmp_seq=2 ttl=64 time=0.683 ms
+64 bytes from fd00:203:0:113:f816:3eff:fe58:be4e icmp_seq=3 ttl=64 time=0.762 ms
+64 bytes from fd00:203:0:113:f816:3eff:fe58:be4e icmp_seq=4 ttl=64 time=0.486 ms
+
+--- fd00:203:0:113:f816:3eff:fe58:be4e ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 2999ms
+rtt min/avg/max/mdev = 0.486/0.796/1.253/0.282 ms
+Obtain access to the instance.
+
+Test IPv4 and IPv6 connectivity to the Internet or other external network.
+
+
+
+
+
+openstack security group rule create --proto icmp default
+openstack security group rule create --ethertype IPv6 --proto ipv6-icmp default
+openstack security group rule create --proto tcp --dst-port 22 default
+openstack security group rule create --ethertype IPv6 --proto tcp --dst-port 22 default
+
+
+
+
+
+
+
+openstack network create  --share --provider-physical-network provider --provider-network-type flat public
+
+openstack subnet create --network public \
+ --allocation-pool start=192.168.56.100,end=192.168.56.200 \
+ --dns-nameserver 192.168.56.1 --gateway 192.168.56.1 \
+ --subnet-range 192.168.56.0/24 public-subnet
+
+
+openstack security group rule create --proto icmp default
+
+openstack security group rule create --proto tcp --dst-port 22 default
+
+
+
+
+
+
+
+openstack network create --share --provider-physical-network provider --provider-network-type flat provider1
+
+openstack subnet create --subnet-range 192.168.56.0/24 --gateway 192.168.56.1 \
+  --network provider1 --allocation-pool start=192.168.56.120,end=192.168.56.200 \
+  --dns-nameserver 8.8.4.4 provider1-v4
+
+openstack subnet create --subnet-range 192.168.56.0/24 --gateway 192.168.56.1 \
+  --network provider1 --dns-nameserver 8.8.4.4 provider1-v4
+
+
+openstack security group rule create --proto icmp default
+
+
+openstack server create --flavor m1.nano --image cirros --nic net-id=9d5443fa-0ae4-4270-8f00-67e6a68b299a cirros2
+
+systemctl restart neutron-l3-agent.service
+systemctl enable neutron-l3-agent.service
+
+neutron agent-list
+
+
+# Generated by NetworkManager
+nameserver 223.6.6.6
+nameserver 8.8.4.4
+nameserver 8.8.8.8
+nameserver 61.139.2.69
+
+
+
+packstack --allinone --provision-demo=n --os-neutron-ml2-type-drivers=flat --os-neutron-ml2-mechanism-drivers=linuxbridge --os-neutron-ml2-flat-networks=physnet0 --os-neutron-l2-agent=linuxbridge --os-neutron-lb-interface-mappings=physnet0:eth1 --os-neutron-ml2-tenant-network-types=' ' --nagios-install=n 
+
+source /root/keystonerc_admin
+
+
+neutron net-create --shared --provider:network_type=flat --provider:physical_network=physnet0 othernet
+
+neutron net-create --shared --provider:network_type=flat --provider:enp0s8 othernet
+
+neutron net-create --shared --provider:network_type=flat --provider:enp0s8 othernet
+neutron subnet-create --name other_subnet --enable_dhcp --allocation-pool=start=192.168.56.2,end=192.168.56.100 --gateway=192.168.56.1 --dns-nameserver=8.8.8.8 othernet 192.168.56.0/24
+
+
+
+
+
+
+https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install-option1.html
+
+
+
+
+cinder service-list
+
+
