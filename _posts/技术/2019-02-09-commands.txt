@@ -1459,6 +1459,7 @@ openstack server create --flavor m1.tiny --image cirros-0.4.0-x86_64-disk --nic 
 
 openstack server create --flavor m1.tiny --image cirros --nic net-id=public vm1
 
+openstack server create --flavor m1.tiny --image cirros-0.4.0-x86_64-disk --nic net-id=069dec3c-8322-4ae0-a250-ffbd49aebe07 cmd-created-vm
 
 查看是否创建成功
 [root@controller ~]# 
@@ -4380,5 +4381,201 @@ https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-ins
 
 
 cinder service-list
+
+
+
+openstack 常用术语 
+https://docs.openstack.org/ocata/zh_CN/install-guide-ubuntu/common/glossary.html
+
+
+
+
+
+openstack 使用
+知识点到考试的解读
+
+一、Keystone认证模块基本出3个题
+
+1、有关keystone的service和endpoint相关；
+
+2、跟创建用户有关，包括domains,groups, projects, users,和roles；
+
+3、跟用户的环境变量有关；
+
+4、修改用户相关信息，包括密码等。
+
+这个模块比较简单，要想通过一定不能丢分。
+
+二、Glance镜像管理模块基本出3个题
+
+1、上传镜像相关；
+
+2、修改和添加镜像的相关参数；
+
+3、镜像的导出。
+
+镜像的后端这也要准备一下，比如考虑增加一个路径，这个模块比较简单，要想通过一定不能丢分。
+
+三、块存储管理模块基本出3个题
+
+1、跟据相关参数要求创建一个块存储；
+
+2、创建一个加密卷；
+
+3、卷的配额管理；
+
+4、卷的快照管理；
+
+5、会和计算结合挂载一个卷，卸载一个卷等。
+
+结合知识点，这个模块出题点会多些，而且会结合计算模块一起考，要想通过一定不能丢分，特别是加密这个题，单词比较长不容易记忆要掌握好技巧。
+
+四、对象储管理模块基本出3个题
+
+1、上传指定对象文件；
+
+2、结合用户或project对象文件的权限控制，包括读、写、查看；
+
+3、下载指定对象文件到指定目录；
+
+4、过期文件的管理。
+
+按要求上传下载文件对象不要出错，一个题里会有多步操作的情况。
+
+五、heat编排模块基本出2-3个题
+
+1、根据要求创建stack；
+
+2、查看stack的状态和输出信息；
+
+3、根据要求更新stack。
+
+目前不会要求你编辑heat模版，但练习时要练到，考虑到知识点有，以后考试可能会考。
+
+六、Nova计算模块基本出5个题左右
+
+1、根据要求创建一个实例；
+
+2、修改实例的状态（关机、停止、恢复）；
+
+3、创建并管理keypairs，能够用keypairs启动实例；
+
+4、实例绑定和删除 Floating IP；
+
+5、管理安全组规则；
+
+6、管理实例快照，能够用快照启动实例；
+
+7、管理配额。
+
+7个知识会出5道左右的题，所以某些题是几个知识点的综合，分有多步操作。
+
+七、Neutron网络模块基本出5个题左右
+
+1、根据要求创建外部网络；
+
+2、创建内部网络及子网；
+
+3、创建路由、指定网关、并绑定接口；
+
+4、管理project的安全组规则；
+
+5、配额管理；
+
+6、申请Floating IP,并绑定到实例，解绑Floating IP。
+
+网络部分命令比较多相对复杂，网络部分最好有个网络拓扑结构图方便记忆相关命令。
+
+八、Troubleshooting模块出4个题左右
+
+1、要学会分析log信息，根据log信息排除相关问题；
+
+2、学会查看各服务的状态；
+
+3、要学会备份数据库、实例等信息；
+
+4、能够排查网络故障。
+
+这部分要求比较高，平时就要养成独立分析问题解决问题的能力。
+
+九、界面操作
+
+1、界面操作大概有一个题。
+
+在考试时尽量不要用界面操作，除了两种情况：一是确认命令没有问题但没有出结果；二是考试时间不够了。说明一下考试时很多题是界面操作不了的，只能命令行操作。
+
+十、OpenStack知识
+
+1、OpenStack知识这部分不会出题。
+
+能够使用API /CLI这部分就会给分的。
+
+
+小结：考试共计32道操作题，考试时间2.5个小时，平均下来每个题不到5分钟，
+再去除理解题意、拷贝等操作，实际的时间更少了，所以一定要熟练。
+
+
+
+
+display 随意
+user name: admin
+api key : 123456
+auth service  http://Controller:5000/v3
+keyston version ：3
+use scope： domain  Default
+Project name： admin
+
+
+[filter:keystoneauth]
+use = egg:swift#keystoneauth
+operator_roles = admin,user  ---- 在创建用户时候，用户必须是admin或者user角色。
+
+
+什么是逻辑分区管理 LVM ，如何在Ubuntu中使用？
+
+什么是 LVM?
+!在LVM下，磁盘和分区可以抽象成一个含有多个磁盘和分区的设备。你的操作系统将不会知道这些区别，因为LVM只会给操作系统展示你设置的卷组（磁盘）和逻辑卷（分区）!!!!!!!!!!!!
+
+
+
+逻辑分区管理是一个存在于磁盘/分区和操作系统之间的一个抽象层。在传统的磁盘管理中，你的操作系统寻找有哪些磁盘可用（/dev/sda、/dev/sdb等等），并且这些磁盘有哪些可用的分区（如/dev/sda1、/dev/sda2等等）。
+
+在LVM下，磁盘和分区可以抽象成一个含有多个磁盘和分区的设备。你的操作系统将不会知道这些区别，因为LVM只会给操作系统展示你设置的卷组（磁盘）和逻辑卷（分区）
+
+因为卷组和逻辑卷并不物理地对应到影片，因此可以很容易地动态调整和创建新的磁盘和分区。除此之外，LVM带来了你的文件系统所不具备的功能。比如，ext3不支持实时快照，但是如果你正在使用LVM你可以不卸载磁盘的情况下做一个逻辑卷的快照。
+
+你什么时候该使用LVM？
+一些发行版如Fedora已经默认安装了LVM。
+
+如果你想要轻松地扩展(如调整分区大小等)或者想要将多块磁盘组成一个存储池，那么LVM或许正是你所寻找的。
+
+
+
+
+
+pip install virtualenv virtualenvwrapper-win
+mkvirtualenv openstack
+git clone git://git.openstack.org/openstack/nova
+workon openstack
+pip install -r requirements.txt
+
+
+pip install -r requirements.txt Ignoring Routes: markers "python_version!='2.7'" don't match your environment
+
+
+牺牲一定程度的数据一致性来达到高可用性和可伸缩性，支持多租户模式、容器和对象读写操作，适合解决互联网的应用场景下非结构化数据存储问题。
+一致性散列（Consistent Hashing)
+
+面对海量级别的对象，需要存放在成千上万台服务器和硬盘设备上，首先要解决寻址问题，即如何将对象分布到这些设备地址上。Swift 是基于一致性散列技术，通过计算可将对象均匀分布到虚拟空间的虚拟节点上，在增加或删除节点时可大大减少需移动的数据量；虚拟空间大小通常采用 2 的 n 次幂，便于进行高效的移位操作；然后通过独特的数据结构 Ring（环）再将虚拟节点映射到实际的物理存储设备上，完成寻址过程。
+
+
+数据一致性模型（Consistency Model）
+
+按照 Eric Brewer 的 CAP（Consistency，Availability，Partition Tolerance）理论，无法同时满足 3 个方面，Swift 放弃严格一致性（满足 ACID 事务级别），而采用最终一致性模型（Eventual Consistency），来达到高可用性和无限水平扩展能力。
+（1）定义：N：数据的副本总数；W：写操作被确认接受的副本数量；R：读操作的副本数量
+
+（2）强一致性：R+W>N，以保证对副本的读写操作会产生交集，从而保证可以读取到最新版本；如果 W=N，R=1，则需要全部更新，适合大量读少量写操作场景下的强一致性；如果 R=N，W=1，则只更新一个副本，通过读取全部副本来得到最新版本，适合大量写少量读场景下的强一致性。
+
+（3）弱一致性：R+W<=N，如果读写操作的副本集合不产生交集，就可能会读到脏数据；适合对一致性要求比较低的场景。
 
 
