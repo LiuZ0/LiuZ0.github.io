@@ -4579,3 +4579,5 @@ pip install -r requirements.txt Ignoring Routes: markers "python_version!='2.7'"
 （3）弱一致性：R+W<=N，如果读写操作的副本集合不产生交集，就可能会读到脏数据；适合对一致性要求比较低的场景。
 
 
+
+
