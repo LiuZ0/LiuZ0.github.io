@@ -2843,8 +2843,12 @@ mmsystemctl 原系统命令
 
 
 
-ip netns exec qrouter-6d16a025-ef39-44ba-9b29-bb6ddd614c30 route -n
-ip netns exec qrouter-ab01f122-46d0-4e94-b410-0568fb3b86b6 ping 192.168.0.21
+ip netns list
+ip netns exec qrouter-aca36d32-5819-4e7a-af1a-e9f3ebf88282 route -n
+ip netns exec qrouter-aca36d32-5819-4e7a-af1a-e9f3ebf88282 route -n 
+ip netns exec qrouter-aca36d32-5819-4e7a-af1a-e9f3ebf88282 ping 10.0.0.10
+
+ip route add 172.24.4.0/24 dev br-ex
 
 openstack security group rule create --proto icmp --dst-port 0 default
 openstack security group rule create --proto tcp --dst-port 22 default
@@ -4516,8 +4520,7 @@ openstack 使用
 再去除理解题意、拷贝等操作，实际的时间更少了，所以一定要熟练。
 
 
-
-
+---------------------------------------------
 display 随意
 user name: admin
 api key : 123456
@@ -4525,6 +4528,8 @@ auth service  http://Controller:5000/v3
 keyston version ：3
 use scope： domain  Default
 Project name： admin
+---------------------------------------------
+
 
 
 [filter:keystoneauth]
@@ -4590,6 +4595,11 @@ openstack-service restart
 
 for s in `systemctl list-unit-files | grep openstack| awk '{print $1}'`; do systemctl restart $s; done
 
+for s in `systemctl list-unit-files | grep openstack| awk '{print $1}'`; do echo $s; done
+
+for s in `systemctl list-unit-files | grep neutron| awk '{print $1}'`; do echo $s; done
+
+for s in `systemctl list-unit-files | grep neutron| awk '{print $1}'`; do systemctl restart $s; done
 
 
 #!/bin/bash
@@ -4804,6 +4814,12 @@ service neutron-l3-agent restart（fuel控制节点默认stop）
 service neutron-dhcp-agent restart（fuel控制节点默认stop）
 service neutron-metadata-agent restart（fuel控制节点默认stop）
 
+service openvswitch restart
+service neutron-openvswitch-agent restart
+service neutron-l3-agent restart
+service neutron-dhcp-agent restart
+service neutron-metadata-agent restart
+
 
 4.3 计算节点
 service neutron-openvswitch-agent restart
@@ -4892,3 +4908,92 @@ iptables -I FORWARD 1 -s 192.168.56.0/24 -j ACCEPT
 iptables -I FORWARD 1 -d 192.168.56.0/24 -j ACCEPT
 
 
+
+
+VNC不能访问的问题：
+metadata_host=192.168.0.32
+novncproxy_base_url=http://114.116.47.43:6080/vnc_auto.html
+server_proxyclient_address=0.0.0.0
+service  openstack-nova-compute restart
+
+开启华为安全规则ALL:ALL
+
+
+
+
+ip route add 192.168.1.0/24 dev eth0
+net.ipv4.ip_forward = 1
+
+/etc/sysctl.conf
+net.ipv4.ip_forward = 1
+
+sysctl -w net.ipv4.ip_forward=1
+
+$ sudo iptables -A FORWARD -i ens38 -o ens39 -m state --state RELATED,ESTABLISHED -j ACCEPT
+$ sudo iptables -A FORWARD -i ens39 -o ens38 -j ACCEPT
+
+
+
+
+ip addr add 172.24.4.0/24 dev br-ex
+iptables -A FORWARD -d 172.24.4.0/24 -j ACCEPT
+iptables -A FORWARD -s 172.24.4.0/24 -j ACCEPT
+iptables -t nat -I POSTROUTING 1 -s 172.24.4.0/24 -j MASQUERADE
+
+
+ifconfig br-ex promisc
+ifconfig eth0 promisc
+
+
+ip route add 192.168.100.0/24 via 192.168.0.201
+
+
+
+
+
+//------------------------------------------------
+
+
+3、创建cont1容器：
+openstack container create cont1
+[root@controller ~]# openstack container create cont1
++---------------------------------------+-----------+------------------------------------+
+| account                               | container | x-trans-id                         |
++---------------------------------------+-----------+------------------------------------+
+| AUTH_506f9094723b4860b01ad275c87d83d6 | cont1     | tx053c325d7dc440d6bc1e3-005c651100 |
++---------------------------------------+-----------+------------------------------------+
+
+4、将测试文件上传到container1容器：
+openstack object create cont1 testfile1
+
+[root@controller ~]# openstack object create cont1 testfile1
++-----------+-----------+----------------------------------+
+| object    | container | etag                             |
++-----------+-----------+----------------------------------+
+| testfile1 | cont1     | b61fea1c05fcc0d6bfb43d020274dea6 |
++-----------+-----------+----------------------------------+
+
+5、在container1容器中列出文件：
+openstack object list cont1
+[root@controller ~]# openstack object list cont1
++-----------+
+| Name      |
++-----------+
+| testfile1 |
++-----------+
+
+6、从container1容器中下载一个测试文件：
+openstack object save cont1 testfile2
+
+删除本地testfile1文件
+[root@controller ~]# rm testfile1 
+
+从容器下载testfile1文件至本地
+[root@controller ~]# openstack object save cont1 testfile1
+
+查看testfile1
+[root@controller ~]# more testfile1 
+
+
+
+openstack server create --flavor mm1.tiny --image cirros --nic net-id=27109cd0-1fee-4931-98ae-c1e35cbe0ed7 vm2
