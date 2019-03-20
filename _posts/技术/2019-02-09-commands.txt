@@ -493,9 +493,7 @@ default_store = file
 filesystem_store_datadir = /var/lib/glance/images/
 
 
-
 Edit the /etc/glance/glance-registry.conf file and complete the following actions:
-
 
 
 [database]
@@ -5174,7 +5172,6 @@ ubuntu 下重启网络
 sudo service network restart
 但其实在ubuntu里要用 network-manager
 sudo service network-manager restart
-
 
 
 iptables -A FORWARD -d 192.168.122.0/24 -j ACCEPT
