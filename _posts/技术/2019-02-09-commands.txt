@@ -546,6 +546,8 @@ I had done the openstack service create --name glance.... twice So, I deleted it
 
 openstack image create "cirros" --file cirros-0.3.4-x86_64-disk.img --disk-format qcow2 --container-format bare --public
 
+openstack image create "cirros1" --file cirros-0.4.0-x86_64-disk.img --disk-format qcow2 --container-format bare --public
+
 
 
 openstack image list
