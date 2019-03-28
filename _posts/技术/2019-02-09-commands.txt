@@ -5176,8 +5176,45 @@ sudo service network restart
 sudo service network-manager restart
 
 
-iptables -A FORWARD -d 192.168.122.0/24 -j ACCEPT
-iptables -A FORWARD -s 192.168.122.0/24 -j ACCEPT
-iptables -t nat -I POSTROUTING 1 -s 192.168.122.0/24 -j MASQUERADE
+iptables -A FORWARD -d 192.168.56.0/24 -j ACCEPT
+iptables -A FORWARD -s 192.168.56.0/24 -j ACCEPT
+iptables -t nat -I POSTROUTING 1 -s 192.168.56.0/24 -j MASQUERADE
+
+
+
+添加本地源
+wget -m -c -np -nH --cut-dirs=4 -e robots=off http://vault.centos.org/7.2.1511/cloud/x86_64/openstack-newton/ -P
+wget -m -c -np -nH --cut-dirs=3 -e robots=off http://mirrors.aliyun.com/ceph/rpm-hammer/el7/ -P /root/ceph
+
+wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.163.com/repo/Centos-7.repo
+
+[root@controller yum.repos.d]# more openstack.repo
+[openstack-rocky]
+name=openstack-rocky
+baseurl=file:///root/openstack-rocky
+enabled=1
+gpgcheck=0
+
+
+
+keepcache setting to 1 in the /etc/yum.conf file as follows:
+
+# vi /etc/yum.conf
+keepcache = 1
+
+# yum clean packages
+
+# yum clean metadata
+
+To delete package headers, use the following command:
+
+# yum clean headers
+To clean all cached information, use the following command:
+
+# yum clean all
+If you get the message “Metadata file does not match checksum” during a Yum operation, clearing the metadata from the cache might not help. In this case, adding the following line to /etc/yum.conf resolves the problem:
+
+# vi /etc/yum.conf
+http_caching=none
 
 
