@@ -4585,6 +4585,7 @@ pip install -r requirements.txt Ignoring Routes: markers "python_version!='2.7'"
 
 Windows hosts
 C:\Windows\System32\drivers\etc
+C:\Windows\System32\drivers\etc
 
 
 openstack-service restart
