@@ -2610,6 +2610,7 @@ cat << EOF >> /etc/hosts
 192.168.56.128 controller
 EOF
 
+
 禁用 Apparmor
 service apparmor stop
 update-rc.d -f apparmor remove 
@@ -5197,7 +5198,6 @@ enabled=1
 gpgcheck=0
 
 
-
 keepcache setting to 1 in the /etc/yum.conf file as follows:
 
 # vi /etc/yum.conf
@@ -5217,5 +5217,16 @@ If you get the message “Metadata file does not match checksum” during a Yum 
 
 # vi /etc/yum.conf
 http_caching=none
+
+
+
+
+inux下指定位置为
+$HOME/.config/pip/pip.conf
+
+[global]
+timeout = 60
+index-url = http://pypi.douban.com/simple
+trusted-host = pypi.douban.com
 
 
